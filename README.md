@@ -41,10 +41,17 @@
 
 ## Ideas
 
+### Sync across multiple systems
+
 If you're using OS X, are signed into iCloud and have configured iCloud
 Drive, you can stash the buckets in there and have them synced across
 all of your devices. Probably don't put sensitive stuff in there,
 though.
+
+### Shell prompt integration
+
+A sample shell function is included for integration with `bash-git-prompt`.
+You can find this in `t.sh`.
 
 ## Bugs
 
