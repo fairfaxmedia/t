@@ -40,6 +40,14 @@ Once in the new subshell...
     $ pwd
 	/Users/jslee/t/6c214a3616b5
 
+### Open a bucket in Finder
+
+    $ t finder 6c214a3616b5
+
+Or if you've already entered the bucket...
+
+    $ t finder
+
 ### Marking a bucket for later garbage collection
 
     $ t finished 6c214a3616b5

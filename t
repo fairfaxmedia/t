@@ -146,12 +146,25 @@ finished() {
 	fi
 }
 
+finder() {
+	id="$T_BUCKET_ID"
+	if [ -n "$1" ] ; then
+		id="$1"
+		shift
+	fi
+    if is_ok "$id" > /dev/null 2>&1 ; then
+        open -a Finder "$ttop/$id"
+    else
+        die "$id is invalid, not opening in Finder"
+    fi
+}
+
 setup
 
 command="$1"
 shift
 case "$command" in
-new|enter|title|finished|status)
+new|enter|title|finished|status|finder)
 	$command $@
 	;;
 setup|home|list|gc)
