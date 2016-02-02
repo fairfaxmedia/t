@@ -28,7 +28,8 @@
 
     $ t enter 6c214a3616b5
 
-    $ pwd /Users/jslee/t/6c214a3616b5
+    $ pwd
+	/Users/jslee/t/6c214a3616b5
 
 ### Marking a bucket for later garbage collection
 
@@ -52,6 +53,10 @@ though.
 
 A sample shell function is included for integration with `bash-git-prompt`.
 You can find this in `t.sh`.
+
+### Shell tab-completion
+
+This *probably* wouldn't be too hard to implement.
 
 ## Bugs
 
