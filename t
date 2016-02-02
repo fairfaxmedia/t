@@ -51,7 +51,7 @@ list() {
 				printf "%-19s  %-2s  %-12s  %-s\n" "$timestamp" "$gc" "$id" "$title"
 			fi
 		fi
-	done
+	done | sort -n
 }
 
 is_ok() {
