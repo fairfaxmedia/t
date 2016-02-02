@@ -4,14 +4,23 @@
 
 `t` is a utility to help you stash that temporary gunk and hopefully find it again later.
 
+### Initial setup
+
+Install `t` somewhere in your `$PATH`.
+
+    $ sudo cp t /usr/local/bin/t
+
+Configuration is a one-liner, just telling it where to store things:
+
+    $ echo 'ttop=$HOME/t' > $HOME/.trc
+
 ### Creating a stash bucket:
 
     $ t new evil birthday idea
 
-    ## a bucket is created and a new subshell spawned inside the bucket
-    ## $T_BUCKET_ID is set in the subshell's environment
+A bucket is created and a new subshell spawned inside the bucket. The variable `$T_BUCKET_ID` is set in the subshell's environment
 
-    ## and then in the subshell...
+Once in the new subshell...
 
     $ pwd
     /Users/jslee/t/6c214a3616b5
@@ -49,6 +58,8 @@ Drive, you can stash the buckets in there and have them synced across
 all of your devices. Probably don't put sensitive stuff in there,
 though.
 
+Blah blah Dropbox blah Google Drive blah blah. All possible, I'm sure.
+
 ### Shell prompt integration
 
 A sample shell function is included for integration with `bash-git-prompt`.
@@ -58,13 +69,16 @@ You can find this in `t.sh`.
 
 This *probably* wouldn't be too hard to implement.
 
+
 ## Bugs
 
 Yep, there'll be some. PRs welcomed :-)
 
+
 ## Who?
 
 John Slee <john.slee@fairfaxmedia.com.au>
+
 
 ## License
 
