@@ -170,9 +170,13 @@ keep() {
 
 # open an OSX Finder window
 finder() {
-	id="$(get_id "$1")"
-    [ "$?" == "0" ] || die "no valid ID supplied or implied"
-    open -a Finder "$ttop/$id"
+    if [ "$(uname)" = "Darwin" ] ; then
+        id="$(get_id "$1")"
+        [ "$?" == "0" ] || die "no valid ID supplied or implied"
+        open -a Finder "$ttop/$id"
+    else
+        die "This command requires Apple OS X."
+    fi
 }
 
 setup
