@@ -161,6 +161,13 @@ finished() {
     touch "$id/.gc"
 }
 
+# mark a bucket for disposal next time gc is invoked
+keep() {
+	id="$(get_id "$1")"
+    [ "$?" == "0" ] || die "no valid ID supplied or implied"
+    rm -f "$id/.gc"
+}
+
 # open an OSX Finder window
 finder() {
 	id="$(get_id "$1")"
@@ -173,7 +180,7 @@ setup
 command="$1"
 shift
 case "$command" in
-get_id|is_ok|new|enter|title|finished|status|finder)
+keep|get_id|is_ok|new|enter|title|finished|status|finder)
 	$command $@
 	;;
 setup|home|list|gc)
@@ -193,6 +200,7 @@ Several commands are available. Optional arguments are shown in [BRACKETS]
     get_id   [ID]          find and validate a bucket ID, printing to stdout
     home     [ID]          print the path to a bucket to stdout
     is_ok    [ID]          check the health of a bucket
+    keep     [ID]          rescue the bucket from future garbage collection
     list                   list all current buckets
     new      BUCKET TITLE  create a new bucket and spawn a subshell inside it
     setup                  create the top-level bucket structure (automatic)
