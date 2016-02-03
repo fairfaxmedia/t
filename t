@@ -30,7 +30,16 @@ setup() {
 }
 
 newid() {
-	uuidgen | shasum | sed -n 's/^\([a-f0-9]\{12\}\).*$/\1/p'
+    ( \
+        if which uuidgen > /dev/null ; then
+            uuidgen
+        else
+            # a compromise but still "good enough for government work..."
+            ( echo $$ ; tty ; id ; hostname ; date +%s ; w ; pwd )
+        fi
+    ) | openssl sha | sed -n 's/^\([a-f0-9]\{7\}\).*$/\1/p'
+    # use openssl sha because the name of the sha commandline util
+    # seems inconsistent. some OS have sha1sum, some have shasum
 }
 
 ids() {
@@ -38,7 +47,7 @@ ids() {
 }
 
 list() {
-	printf "%-19s  %-2s  %-12s  %-s\n" "CREATED ON" "GC" "ID" "TITLE"
+	printf "%-19s  %-2s  %-7s  %-s\n" "CREATED ON" "GC" "ID" "TITLE"
 	ids | while read id ; do
 		if [ -f "$id/.title" -a -f "$id/.timestamp" ] ; then
 			gc=N
@@ -48,7 +57,7 @@ list() {
 			title="$(< $id/.title)"
 			timestamp="$(< $id/.timestamp)"
 			if [ -n "$title" -a -n "$timestamp" ] ; then
-				printf "%-19s  %-2s  %-12s  %-s\n" "$timestamp" "$gc" "$id" "$title"
+				printf "%-19s  %-2s  %-7s  %-s\n" "$timestamp" "$gc" "$id" "$title"
 			fi
 		fi
 	done | sort -n
@@ -58,12 +67,26 @@ is_ok() {
 	id="$1"
 	title="$id/.title"
 	timestamp="$id/.timestamp"
-	[ \
+	( [ \
 		-f "$title" \
 		-a -f "$timestamp" \
 		-a -n "$(< "$title")" \
 		-a -n "$(< "$timestamp")" \
-	]
+	] ) > /dev/null 2>&1
+}
+
+get_id() {
+    supplied="$1"
+    implied="$T_BUCKET_ID"
+    if [ -n "$supplied" ] && is_ok "$supplied" ; then
+        echo "$supplied"
+    else
+        if [ -n "$implied" ] && is_ok "$implied" ; then
+            echo "$implied"
+        else
+            false
+        fi
+    fi
 }
 
 gc() {
@@ -92,7 +115,7 @@ new() {
 	id="$(newid)"
 	path="$ttop/$id"
 	mkdir -m700 "$path"	|| die "can't create new bucket: $path"
-	cd "$path"		|| die "can't access new bucket: $path"
+	cd "$path"		    || die "can't access new bucket: $path"
 	echo "$title" > .title
 	date "+%F %T" > .timestamp
 	"$0" enter "$id"
@@ -113,15 +136,9 @@ home() {
 
 # intended for use in scripting
 title() {
-	id="$T_BUCKET_ID"
-	if [ -n "$1" ] ; then
-		id="$1"
-		shift
-	fi
-	[ -n "$id" ] || die "specify an ID if not in a bucket"
-	if is_ok "$id" ; then
-		echo -n "$(< "$id/.title")"
-	fi
+	id="$(get_id "$1")"
+    [ "$?" == "0" ] || die "no valid ID supplied or implied"
+    echo -n "$(< "$id/.title")"
 }
 
 status() {
@@ -139,24 +156,16 @@ status() {
 
 # mark a bucket for disposal next time gc is invoked
 finished() {
-	id="$1"
-	shift
-	if is_ok "$id" ; then
-		touch "$id/.gc"
-	fi
+	id="$(get_id "$1")"
+    [ "$?" == "0" ] || die "no valid ID supplied or implied"
+    touch "$id/.gc"
 }
 
+# open an OSX Finder window
 finder() {
-	id="$T_BUCKET_ID"
-	if [ -n "$1" ] ; then
-		id="$1"
-		shift
-	fi
-    if is_ok "$id" > /dev/null 2>&1 ; then
-        open -a Finder "$ttop/$id"
-    else
-        die "$id is invalid, not opening in Finder"
-    fi
+	id="$(get_id "$1")"
+    [ "$?" == "0" ] || die "no valid ID supplied or implied"
+    open -a Finder "$ttop/$id"
 }
 
 setup
@@ -164,12 +173,37 @@ setup
 command="$1"
 shift
 case "$command" in
-new|enter|title|finished|status|finder)
+get_id|is_ok|new|enter|title|finished|status|finder)
 	$command $@
 	;;
 setup|home|list|gc)
 	$command
 	;;
+help)
+    cat <<EOHELP
+usage: $(basename $0) command ARGS
+
+Several commands are available. Optional arguments are shown in [BRACKETS]
+
+    COMMAND  ARGUMENTS     DESCRIPTION
+    enter    ID            spawn a subshell in the specified bucket
+    finder   [ID]          open the specified bucket in OSX Finder
+    finished [ID]          mark the bucket for future garbage collection
+    gc                     garbage-collect all invalid or marked buckets
+    get_id   [ID]          find and validate a bucket ID, printing to stdout
+    home     [ID]          print the path to a bucket to stdout
+    is_ok    [ID]          check the health of a bucket
+    list                   list all current buckets
+    new      BUCKET TITLE  create a new bucket and spawn a subshell inside it
+    setup                  create the top-level bucket structure (automatic)
+    status                 print ID and title the current bucket to stdout
+    title    [ID]          print title of current or specified bucket to stdout
+
+Where an optional ID is specified, the currently-entered bucket will be assumed
+if no ID is supplied.
+
+EOHELP
+    ;;
 *)
 	die "invalid command: $command"
 	exit 1

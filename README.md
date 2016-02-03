@@ -28,10 +28,10 @@ Once in the new subshell...
 ### Listing the buckets
 
     $ t list
-    CREATED ON           GC  ID            TITLE
-    2016-02-02 22:41:17  Y   1b58bace38cd  testing 123
-    2016-02-02 22:57:16  N   6c214a3616b5  evil birthday idea
-    2016-02-02 22:44:50  Y   f760116d49cf  test
+    CREATED ON           GC  ID       TITLE
+    2016-02-02 22:41:17  Y   1b58bac  testing 123
+    2016-02-02 22:57:16  N   6c214a3  evil birthday idea
+    2016-02-02 22:44:50  Y   f760116  test
 
 ### Entering an existing bucket
 
@@ -52,10 +52,17 @@ Or if you've already entered the bucket...
 
     $ t finished 6c214a3616b5
 
+Or if you've already entered the bucket...
+
+    $ t finished
+
 ### Garbage collection
 
     $ t gc
 
+### Other commands
+
+    $ t help
 
 ## Ideas
 
