@@ -47,7 +47,11 @@ ids() {
 }
 
 list() {
-	printf "%-19s  %-2s  %-7s  %-s\n" "CREATED ON" "GC" "ID" "TITLE"
+  if [ "$1" = "du" ] ; then
+    printf "%-19s  %-2s  %-7s  %-5s %-s\n" "CREATED ON" "GC" "ID" "SIZE" "TITLE"
+  else
+    printf "%-19s  %-2s  %-7s  %-s\n" "CREATED ON" "GC" "ID" "TITLE"
+  fi
 	ids | while read id ; do
 		if [ -f "$id/.title" -a -f "$id/.timestamp" ] ; then
 			gc=N
@@ -57,7 +61,12 @@ list() {
 			title="$(< $id/.title)"
 			timestamp="$(< $id/.timestamp)"
 			if [ -n "$title" -a -n "$timestamp" ] ; then
-				printf "%-19s  %-2s  %-7s  %-s\n" "$timestamp" "$gc" "$id" "$title"
+        if [ "$1" = "du" ] ; then
+          du="$(du -sh "$id" | awk '{ print $1 }')"
+          printf "%-19s  %-2s  %-7s  %-5s  %-s\n" "$timestamp" "$gc" "$id" "$du" "$title"
+        else
+          printf "%-19s  %-2s  %-7s  %-s\n" "$timestamp" "$gc" "$id" "$title"
+        fi
 			fi
 		fi
 	done | sort -n
@@ -187,9 +196,15 @@ case "$command" in
 keep|get_id|is_ok|new|enter|title|finished|status|finder)
 	$command $@
 	;;
-setup|home|list|gc)
+setup|home|gc)
 	$command
 	;;
+list)
+  $command "$1"
+  ;;
+du)
+  list du
+  ;;
 help)
     cat <<EOHELP
 usage: $(basename $0) command ARGS
@@ -205,7 +220,8 @@ Several commands are available. Optional arguments are shown in [BRACKETS]
     home     [ID]          print the path to a bucket to stdout
     is_ok    [ID]          check the health of a bucket
     keep     [ID]          rescue the bucket from future garbage collection
-    list                   list all current buckets
+    list     [du]          list all current buckets (optionally with size)
+    du                     same as '$(basename $0) list du'
     new      BUCKET TITLE  create a new bucket and spawn a subshell inside it
     setup                  create the top-level bucket structure (automatic)
     status                 print ID and title the current bucket to stdout

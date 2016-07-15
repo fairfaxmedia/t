@@ -33,6 +33,16 @@ Once in the new subshell...
     2016-02-02 22:57:16  N   6c214a3  evil birthday idea
     2016-02-02 22:44:50  Y   f760116  test
 
+### Listing the buckets (with size displayed)
+
+This is not the default behaviour because it would be annoyingly slow if you had a large bucket, or one with many files.
+
+    $ t list du
+    CREATED ON           GC  ID       SIZE  TITLE
+    2016-02-02 22:41:17  Y   1b58bac  28K   testing 123
+    2016-02-02 22:57:16  N   6c214a3  60K   evil birthday idea
+    2016-02-02 22:44:50  Y   f760116  93M   test
+
 ### Entering an existing bucket
 
     $ t enter 6c214a3616b5
