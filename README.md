@@ -25,6 +25,26 @@ Once in the new subshell...
     $ pwd
     /Users/jslee/t/6c214a3616b5
 
+Also note that if `t` recognises your `$SHELL`, it will set `$HISTFILE` to a file local to
+the bucket, giving you a bucket-local context. Useful!
+
+    $ t status
+    in bucket ab2395e: shell history demo
+
+    $ ls -l
+    total 32
+    -rw-------  1 jslee  staff  15  4 Aug 23:48 .shell_history_bash
+    -rw-r--r--  1 jslee  staff  20  4 Aug 23:48 .timestamp
+    -rw-r--r--  1 jslee  staff  19  4 Aug 23:48 .title
+    -rw-r--r--  1 jslee  staff   3  4 Aug 23:48 test
+
+    $ history
+    1  echo hi > test
+    2  ls -l
+    3  t status
+    4  ls -l
+    5  history
+
 ### Listing the buckets
 
     $ t list
