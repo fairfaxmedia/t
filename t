@@ -32,16 +32,16 @@ setup() {
 }
 
 newid() {
-    ( \
-        if which uuidgen > /dev/null ; then
-            uuidgen
-        else
-            # a compromise but still "good enough for government work..."
-            ( echo $$ ; tty ; id ; hostname ; date +%s ; w ; pwd )
-        fi
-    ) | openssl sha | sed -n 's/^\([a-f0-9]\{7\}\).*$/\1/p'
-    # use openssl sha because the name of the sha commandline util
-    # seems inconsistent. some OS have sha1sum, some have shasum
+  ( \
+    if which uuidgen > /dev/null ; then
+      uuidgen
+    else
+      # a compromise but still "good enough for government work..."
+      ( echo $$ ; tty ; id ; hostname ; date +%s ; w ; pwd )
+    fi
+  ) | openssl sha | sed -n 's/^\([a-f0-9]\{7\}\).*$/\1/p'
+  # use openssl sha because the name of the sha commandline util
+  # seems inconsistent. some OS have sha1sum, some have shasum
 }
 
 ids() {
@@ -143,14 +143,14 @@ enter() {
 }
 
 new() {
-	local title="$*"
-	local id="$(newid)"
-	local path="$ttop/$id"
-	mkdir -m700 "$path"	|| die "can't create new bucket: $path"
-	cd "$path"		    || die "can't access new bucket: $path"
-	echo "$title" > .title
-	date "+%F %T" > .timestamp
-	"$0" enter "$id"
+  local title="$*"
+  local id="$(newid)"
+  local path="$ttop/$id"
+  mkdir -m700 "$path"	|| die "can't create new bucket: $path"
+  cd "$path"		    || die "can't access new bucket: $path"
+  echo "$title" > .title
+  date "+%F %T" > .timestamp
+  "$0" enter "$id"
 }
 
 home() {
@@ -205,7 +205,7 @@ keep() {
 # open an OSX Finder window
 finder() {
   if [ "$(uname)" = "Darwin" ] ; then
-    id="$(get_id "$1")"
+    local id="$(get_id "$1")"
     [ -n "$id" ] || die "no valid ID supplied or implied"
     open -a Finder "$ttop/$id"
   else
