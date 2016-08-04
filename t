@@ -39,8 +39,8 @@ newid() {
       # a compromise but still "good enough for government work..."
       ( echo $$ ; tty ; id ; hostname ; date +%s ; w ; pwd )
     fi
-  ) | openssl sha | sed -n 's/^\([a-f0-9]\{7\}\).*$/\1/p'
-  # use openssl sha because the name of the sha commandline util
+  ) | openssl sha1 | sed -n 's/^\(.*=[ ]*\)*\([a-f0-9]\{7,7\}\).*$/\2/p'
+  # use openssl sha1 because the name of the sha commandline util
   # seems inconsistent. some OS have sha1sum, some have shasum
 }
 
