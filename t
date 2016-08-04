@@ -5,8 +5,10 @@
 ### john slee <john.slee@fairfaxmedia.com.au> 
 ### Tue  2 Feb 2016 22:53:53 AEDT
 
+set -e
+
 ttop="$HOME/t"
-trc="$home/.trc"
+trc="$HOME/.trc"
 if [ -f "$trc" ] ; then
 	source $HOME/.trc
 fi
@@ -47,22 +49,26 @@ ids() {
 }
 
 list() {
-  if [ "$1" = "du" ] ; then
+  local du=no
+  if [ "$#" = "1" ] && [ "$1" = "du" ] ; then
+    du=yes
+  fi
+  if [ "$du" = "yes" ] ; then
     printf "%-19s  %-2s  %-7s  %-5s %-s\n" "CREATED ON" "GC" "ID" "SIZE" "TITLE"
   else
     printf "%-19s  %-2s  %-7s  %-s\n" "CREATED ON" "GC" "ID" "TITLE"
   fi
 	ids | while read id ; do
 		if [ -f "$id/.title" -a -f "$id/.timestamp" ] ; then
-			gc=N
+			local gc=N
 			if [ -f "$id/.gc" ] ; then
-				gc=Y
+				local gc=Y
 			fi
-			title="$(< $id/.title)"
-			timestamp="$(< $id/.timestamp)"
+			local title="$(< $id/.title)"
+			local timestamp="$(< $id/.timestamp)"
 			if [ -n "$title" -a -n "$timestamp" ] ; then
-        if [ "$1" = "du" ] ; then
-          du="$(du -sh "$id" | awk '{ print $1 }')"
+        if [ "$du" = "yes" ] ; then
+          local du="$(du -sh "$id" | awk '{ print $1 }')"
           printf "%-19s  %-2s  %-7s  %-5s  %-s\n" "$timestamp" "$gc" "$id" "$du" "$title"
         else
           printf "%-19s  %-2s  %-7s  %-s\n" "$timestamp" "$gc" "$id" "$title"
@@ -73,9 +79,9 @@ list() {
 }
 
 is_ok() {
-	id="$1"
-	title="$id/.title"
-	timestamp="$id/.timestamp"
+	local id="$1"
+	local title="$id/.title"
+	local timestamp="$id/.timestamp"
 	( [ \
 		-f "$title" \
 		-a -f "$timestamp" \
@@ -85,17 +91,17 @@ is_ok() {
 }
 
 get_id() {
-    supplied="$1"
-    implied="$T_BUCKET_ID"
-    if [ -n "$supplied" ] && is_ok "$supplied" ; then
-        echo "$supplied"
+  local supplied="$1"
+  local implied="$T_BUCKET_ID"
+  if [ -n "$supplied" ] && is_ok "$supplied" ; then
+    echo "$supplied"
+  else
+    if [ -n "$implied" ] && is_ok "$implied" ; then
+      echo "$implied"
     else
-        if [ -n "$implied" ] && is_ok "$implied" ; then
-            echo "$implied"
-        else
-            false
-        fi
+      false
     fi
+  fi
 }
 
 gc() {
@@ -107,11 +113,28 @@ gc() {
 	done
 }
 
+shell_can_histfile() {
+  echo "$SHELL" | egrep -q '/((ba)?sh|(pd)?ksh[0-9]*)$'
+}
+
 enter() {
-	id="$1"
+	local id="$1"
 	shift
 	if is_ok "$id" ; then
 		export T_BUCKET_ID="$id"
+    export T_HOME="$ttop/$id"
+    # should work for at least ksh and bash
+    # untested with true Bourne sh but *should* work?
+    if shell_can_histfile ; then
+      # add the shell basename to the history filename because shells
+      # don't all write history in compatible ways and users might
+      # change shells someday... preserving history per $SHELL
+      # prevents them stepping on each others' toes (eg. ksh will
+      # destroy bash history files)
+      export HISTFILE="$T_HOME/.shell_history_$(basename "$SHELL")"
+    else
+      warn "unrecognised shell 'SHELL=$SHELL'; not attempting to set \$HISTFILE"
+    fi
 		cd "$id"
 		exec "$SHELL"
 	else
@@ -120,9 +143,9 @@ enter() {
 }
 
 new() {
-	title="$*"
-	id="$(newid)"
-	path="$ttop/$id"
+	local title="$*"
+	local id="$(newid)"
+	local path="$ttop/$id"
 	mkdir -m700 "$path"	|| die "can't create new bucket: $path"
 	cd "$path"		    || die "can't access new bucket: $path"
 	echo "$title" > .title
@@ -131,10 +154,12 @@ new() {
 }
 
 home() {
-	if [ -n "$T_BUCKET_ID" ] ; then
-		home="$ttop/$T_BUCKET_ID"
+	local id="$(get_id "$1")"
+  [ -n "$id" ] || die "no valid ID supplied or implied"
+	if [ -n "$id" ] ; then
+		local home="$ttop/$id"
 		if [ -d "$home" ] ; then
-			echo "$ttop/$T_BUCKET_ID"
+			echo "$ttop/$id"
 		else
 			die "bucket has vanished: $id"
 		fi
@@ -143,15 +168,15 @@ home() {
 	fi
 }
 
-# intended for use in scripting
+# intended for use in scripting (eg. shell prompt hacks)
 title() {
-	id="$(get_id "$1")"
-    [ "$?" == "0" ] || die "no valid ID supplied or implied"
-    echo -n "$(< "$id/.title")"
+	local id="$(get_id "$1")"
+  [ -n "$id" ] || die "no valid ID supplied or implied"
+  echo -n "$(< "$id/.title")"
 }
 
 status() {
-	id="$T_BUCKET_ID"
+	local id="$T_BUCKET_ID"
 	if [ -n "$id" ] ; then
 		if is_ok "$id" > /dev/null 2>&1 ; then
 			echo "in bucket $id: $(< "$id/.title")"
@@ -165,27 +190,27 @@ status() {
 
 # mark a bucket for disposal next time gc is invoked
 finished() {
-	id="$(get_id "$1")"
-    [ "$?" == "0" ] || die "no valid ID supplied or implied"
-    touch "$id/.gc"
+	local id="$(get_id "$1")"
+  [ -n "$id" ] || die "no valid ID supplied or implied"
+  touch "$id/.gc"
 }
 
 # mark a bucket for disposal next time gc is invoked
 keep() {
-	id="$(get_id "$1")"
-    [ "$?" == "0" ] || die "no valid ID supplied or implied"
-    rm -f "$id/.gc"
+	local id="$(get_id "$1")"
+  [ -n "$id" ] || die "no valid ID supplied or implied"
+  rm -f "$id/.gc"
 }
 
 # open an OSX Finder window
 finder() {
-    if [ "$(uname)" = "Darwin" ] ; then
-        id="$(get_id "$1")"
-        [ "$?" == "0" ] || die "no valid ID supplied or implied"
-        open -a Finder "$ttop/$id"
-    else
-        die "This command requires Apple OS X."
-    fi
+  if [ "$(uname)" = "Darwin" ] ; then
+    id="$(get_id "$1")"
+    [ -n "$id" ] || die "no valid ID supplied or implied"
+    open -a Finder "$ttop/$id"
+  else
+    die "This command requires Apple OS X."
+  fi
 }
 
 setup
@@ -193,14 +218,14 @@ setup
 command="$1"
 shift
 case "$command" in
-keep|get_id|is_ok|new|enter|title|finished|status|finder)
+home|keep|get_id|is_ok|new|enter|title|finished|status|finder)
 	$command $@
 	;;
-setup|home|gc)
+setup|gc)
 	$command
 	;;
 list)
-  $command "$1"
+  $command "$@"
   ;;
 du)
   list du
