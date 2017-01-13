@@ -68,8 +68,8 @@ list() {
 			local timestamp="$(< $id/.timestamp)"
 			if [ -n "$title" -a -n "$timestamp" ] ; then
         if [ "$du" = "yes" ] ; then
-          local du="$(du -sh "$id" | awk '{ print $1 }')"
-          printf "%-19s  %-2s  %-7s  %-5s  %-s\n" "$timestamp" "$gc" "$id" "$du" "$title"
+          local du_output="$(du -sh "$id" | awk '{ print $1 }')"
+          printf "%-19s  %-2s  %-7s  %-5s  %-s\n" "$timestamp" "$gc" "$id" "$du_output" "$title"
         else
           printf "%-19s  %-2s  %-7s  %-s\n" "$timestamp" "$gc" "$id" "$title"
         fi
