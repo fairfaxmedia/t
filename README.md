@@ -127,4 +127,6 @@ John Slee <john.slee@fairfaxmedia.com.au>
 
 ## License
 
+Copyright 2017 Fairfax Media.
+
 Apache 2.0. See LICENSE file.
